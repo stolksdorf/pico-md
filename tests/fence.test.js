@@ -17,6 +17,19 @@ I am content
 });
 
 
+test('can add extra characters to fences', (t)=>{
+	const res = html2json(md(`:::::: test ::::::
+I am content
+:::::::::::::::::::
+`))
+
+	const node = res.child[0];
+	t.is(node.tag, 'div');
+	t.is(node.attr.class, 'test');
+	t.is(node.child[0].text, '\nI am content\n');
+
+})
+
 
 
 module.exports = test;

@@ -23,11 +23,12 @@ const extensions = {
 };
 
 const extractMetadata = (content)=>{
+	const key = '---\n'
 	let meta, md = content.trim();
-	const endIdx = md.indexOf('---\n', 5);
-	if(endIdx !== -1 && content.substring(0,4) === '---\n'){
-		meta = yaml(md.substring(4, endIdx));
-		md   = md.substring(endIdx + 4);
+	const endIdx = md.indexOf(key, key.length + 1);
+	if(endIdx !== -1 && content.substring(0,key.length) === key){
+		meta = yaml(md.substring(key.length, endIdx));
+		md   = md.substring(endIdx + key.length);
 	}
 	return {md, meta};
 };
@@ -41,7 +42,6 @@ module.exports = (content, opts={})=>{
 	if(meta){
 		result = new String(result);
 		result.meta = meta;
-		return result;
 	}
 	return result;
 }

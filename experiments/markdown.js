@@ -15,19 +15,36 @@ const blockRules = {
 	// 	}
 	// },
 
+	fence : {
+			//regex : /\{\{([a-zA-Z0-9_,]*| )([^\}\}]+)\}\}/,
+			regex : /:{3,}([^:\n]+)[:*]\n([^:]+):{3,}/
+			render: (line, classes, content)=>{
+				return `<div class='${classes.replace(/,/g, ' ')}'>${block(content)}</div>`;
+			}
+	},
+
 	headers : {
 		regex : /\n*(#{1,6}) (.+)(\n|$)/,
 		render: (line, marks, text)=>{
 			return `<h${marks.length} id='${snakeCase(text)}'>${inline(text)}</h${marks.length}>`;
 		}
 	},
-	list : {
+	unorderedlist : {
 		regex : /(\- (.+)(\n|$))+/,
 		render : (lines, a, b, c)=>{
 			const items = lines.split('\n')
 				.map((line)=>`<li>${inline(line.replace('- ', ''))}</li>`)
 				.join('\n')
 			return `<ul>${items}</ul>`
+		}
+	},
+	orderedlist : {
+		regex : /(\d+\. (.+)(\n|$))+/,
+		render : (lines, a, b, c)=>{
+			const items = lines.split('\n')
+				.map((line)=>`<li>${inline(line.split('.')[1])}</li>`)
+				.join('\n')
+			return `<ol>${items}</ol>`
 		}
 	},
 	default : (text)=>(text?`<p>${inline(text)}</p>`:'')
@@ -52,7 +69,7 @@ const inlineRules = {
 	},
 	image : {
 		regex : /\!\[([^\[]+)\]\(([^\)]+)\)/,
-		render: (line, className, link)=>`<img class='${className}' src='${link}' />`
+		render: (line, text, link)=>`<img class='${text}' alt='${text}' src='${link}' />`
 	},
 	hyperlink : {
 		regex : /\[([^\[]+)\]\(([^\)]+)\)/,

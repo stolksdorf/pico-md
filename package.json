@@ -1,6 +1,6 @@
 {
   "name": "pico-md",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "A lightweight markdown library with some QoL features.",
   "main": "pico-md.js",
   "scripts": {

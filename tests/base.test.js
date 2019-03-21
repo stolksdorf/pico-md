@@ -30,6 +30,28 @@ test.group('html sanatization', (test)=>{
 	});
 });
 
+test.group('image modifications', (test)=>{
+	test('base image syntax works', (t)=>{
+		const res = html2json(md('![](https://img.com/img)'))
+		const node = res.child[0].child[0];
+
+		t.is(node.tag, 'img');
+		t.is(node.attr.src, 'https://img.com/img');
+		t.is(node.attr.alt, '');
+		t.is(node.attr.class, '');
+	});
+
+	test('can add class names to images', (t)=>{
+		const res = html2json(md('![cool image](https://img.com/img)'))
+		const node = res.child[0].child[0];
+
+		t.is(node.tag, 'img');
+		t.is(node.attr.src, 'https://img.com/img');
+		t.is(node.attr.alt, ['cool', 'image']);
+		t.is(node.attr.class, ['cool', 'image']);
+	});
+})
+
 
 
 

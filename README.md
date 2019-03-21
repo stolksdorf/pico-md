@@ -15,26 +15,30 @@ Currently a wrapper for [Marked](https://www.npmjs.com/package/marked).
 
 
 
+```
+npm i pico-md
+```
+
 
 
 ### Options
 
 - `renderer`: overwrites core renderer object
-- `allowHTML`: false
+- `allowHtml`: false
 
 
 
 ## Metadata
-[YAML Front Matter](https://jekyllrb.com/docs/front-matter/).
+You can store metadata about the markdown file at the top of the file inbetween `---` in either YAML or JSON, called [YAML Front Matter](https://jekyllrb.com/docs/front-matter/). `pico-md` will parse this and remove it from the rendered html string and attach the data to the returned string on a `meta` prop.
 
 
 ```markdown
 ---
 layout: post
-title: Blogging Like a Hacker
+title: Blogging Like a Regular Guy
 ---
 
-# Blogging Like a Hacker
+# Blogging Like a Regular Guy
 Hello, welcome to my blog ...
 
 ```
@@ -43,11 +47,11 @@ Hello, welcome to my blog ...
 ```js
 const md = require('pico-md');
 
-const Post = md(``);
+const Post = md(/*Above markdown*/);
 
-console.log(Post); // <h1>Blogging Like a Hacker</h1>...
+console.log(Post); // <h1>Blogging Like a Regular Guy</h1>...
 console.log(Post.meta.layout); //'post'
-console.log(Post.meta.title); //'Blogging Like a Hacker'
+console.log(Post.meta.title); //'Blogging Like a Regular Guy'
 ```
 
 
@@ -55,7 +59,7 @@ console.log(Post.meta.title); //'Blogging Like a Hacker'
 
 
 
-## Markdown Component
+## React Component
 Renders markdown into HTML within this component.
 
 
@@ -78,7 +82,7 @@ Hi I'm text
 
 <Markdown content={`You can _pass_ in markdown as a prop`} />
 
-<Markdown onClick={()=>alert('boo!')} options={{allowHTML : true}}>
+<Markdown onClick={()=>alert('boo!')} options={{allowHtml : true}}>
 This entire content is clickable <hr />
 </Markdown>
 ```
