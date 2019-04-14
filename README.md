@@ -1,4 +1,4 @@
-# #️⃣ pico-marked
+# #️⃣ pico-md
 A lightweight markdown library with some QoL features.
 
 Currently a wrapper for [Marked](https://www.npmjs.com/package/marked).
