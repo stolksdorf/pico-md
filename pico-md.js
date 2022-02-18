@@ -19,17 +19,21 @@ table: (^\|(.*)\|\n?)+
 header: ^(#{1,5})([^#\n]+)
 */
 
+//TODFO: remember to expose rules
+//TODO: bring trnp in here
+//
+
 
 const wrap=(tag)=>new RegExp(`(?<=\\W|^)\\${tag}(.+?)\\${tag}(?=\\W|$)`,'gm');
 const rules = [
-	[wrap('_'), (_,a)=>`<em>${a}</em>`],
-	[wrap('*'), (_,a)=>`<strong>${a}</strong>`],
-	[wrap('~~'), (_,a)=>`<del>${a}</del>`],
+	[wrap('_'),                  (_,a)=>`<em>${a}</em>`],
+	[wrap('*'),                  (_,a)=>`<strong>${a}</strong>`],
+	[wrap('~~'),                 (_,a)=>`<del>${a}</del>`],
+	[/^-{3,}/gm ,                ()=>`<hr />`],
 	[/!\[([^\]]*)\]\((.*?)\)/gm, (_,a,b) => `<img alt='${a}' src='${b}'></img>`],
-	[/\[([^\]]+)\]\((.*?)\)/gm, (_,a,b) => `<a href='${b}'>${a}</a>`],
-	[/^-{3,}/gm ,()=>`<hr />`],
+	[/\[([^\]]+)\]\((.*?)\)/gm,  (_,a,b) => `<a href='${b}'>${a}</a>`],
 	[/(?<=\W|^){{([\w,]+)\s*/gm, (_,a)=>`<div${a?` class="${a.replace(/,/g, " ")}"`:''}>`],
-	[/}}(?=\W|$)/gm, ()=>`</div>`],
+	[/}}(?=\W|$)/gm,             ()=>`</div>`],
 ];
 const inline = (str)=>{
 	let codetags = [];
@@ -45,8 +49,7 @@ const blockparse = (rules, text, fallback)=>{
 	while(remaining.length > 0){
 		let match = rules.reduce((best, [rgx, fn])=>{
 			let match = rgx.exec(remaining);
-			if(!match) return best;
-			if(!best || match.index < best.index){ match.func = fn; return match; }
+			if(match && (!best || match.index < best.index)){ match.func = fn; return match; }
 			return best;
 		}, false);
 		if(!match) break;
@@ -68,10 +71,9 @@ const Rules = Object.values({
 			return `<pre${lang ? ` class="${lang}"`:''}><code>${content}</code></pre>`;
 		}
 	],
-	//add condition for sanatize HTML >
-	BlockQuote: [/(^>(.*)\n?)+/m,
+	BlockQuote: [/(^(>|&gt;)(.*)\n?)+/m,
 		(text)=>{
-			return `<blockquote>${inline(text.replace(/^> ?/gm, ''))}</blockquote>`;
+			return `<blockquote>${inline(text.replace(/^(>|&gt;) ?/gm, ''))}</blockquote>`;
 		}
 	],
 	HorizontalRule: [/^-{3,}/m, ()=>`<hr />`],
@@ -81,28 +83,33 @@ const Rules = Object.values({
 			return `<h${length} id="${id}">${inline(text)}</h${length}>`
 		}
 	],
-	Table : [/(^\|(.*)\|\n?)+/m,
-		(text)=>{
-			let lines = text.trim().split('\n');
-			lines = lines.map(line=>line.slice(1,-1).split('|'));
+	// TableWithAlignmnet : [/(^\|(.*)\|\n?)(^\|[\|\-: ]+\|\n?)(^\|(.*)\|\n?)+/m,
+	// 	(text)=>{
+	// 		let [headers, align, ...rows] = text.trim().split('\n').map(line=>line.slice(1,-1).split('|'));
 
-			let headers = lines[1].reduce((acc, line)=>{
-				if(!acc) return acc;
-				if(/\s*:-{3,}:\s*/.test(line)) return acc.concat('center');
-				if(/\s*-{3,}:\s*/.test(line)) return acc.concat('right');
-				if(/\s*:?-{3,}\s*/.test(line)) return acc.concat('left');
-				return false;
-			}, []);
+	// 		align = align.map(cell=>{
+	// 			if(/\s*:-{3,}:\s*/.test(cell)) return 'center';
+	// 			if(/\s*-{3,}:\s*/.test(cell)) return 'right';
+	// 			return '';
+	// 		});
 
-			if(!headers){
-				return `<table>\n${lines.map(line=>{
-					return `\t<tr>\n${line.map(cell=>`\t\t<td>${inline(cell)}</td>`).join('\n')}\n\t</tr>`
-				}).join('\n')}\n</table>`;
-			}
-			//TODO: FIGURE OUT HEADERS
-			return 'FIURE OUT HEADERS'
-		}
-	],
+	// 		const getAlignment = (idx)=>align[idx]?` align="${align[idx]}"`:'';
+
+	// 		let head = headers.map((h,idx)=>`\t\t<th${getAlignment(idx)}>${inline(h)}</th>`).join('\n');
+	// 		let body = rows.map(line=>{
+	// 			return `\t\t<tr>\n${line.map((cell,idx)=>`\t\t\t<td${getAlignment(idx)}>${inline(cell)}</td>`).join('\n')}\n\t\t</tr>`
+	// 		}).join('\n');
+	// 		return `<table>\n\t<thead><tr>\n${head}\n\t</tr></thead>\n\t<tbody>\n${body}\n\t</tbody>\n</table>`
+	// 	}
+	// ],
+	// SimpleTable : [/(^\|(.*)\|\n?)+/m,
+	// 	(text)=>{
+	// 		let lines = text.trim().split('\n').map(line=>line.slice(1,-1).split('|'));
+	// 		return `<table>\n${lines.map(line=>{
+	// 			return `\t<tr>\n${line.map(cell=>`\t\t<td>${inline(cell)}</td>`).join('\n')}\n\t</tr>`
+	// 		}).join('\n')}\n</table>`;
+	// 	}
+	// ],
 	List : [/(^[ \t]*([0-9]+\.|-)(.*)\n?)+/m,
 		(text)=>{
 			console.log(text)
@@ -115,32 +122,74 @@ const Rules = Object.values({
 				}
 			});
 
+			//TODO: forget type switching
+
+			let foo= [];
 			let res = '';
 			let stack = [];
 			lines.map(({type, idt, text})=>{
 				if(!stack.length){
 					stack.push({type, idt});
-					res = `<${type}><li>${text}`;
+					res = `<${type}>\n${' '.repeat(idt+2)}<li>${text}`;
+
+					foo.push(`<${type}>`);
+
+					foo.push(`${' '.repeat(idt+2)}<li>`);
+					foo.push(`${' '.repeat(idt+2)}${text}`);
 					return;
 				}
+				// Loop through stack each time
+
+				// stack.find(stk=>{
+
+
+				// });
+
+
 				if(idt == stack[0].idt){
-					res += `</li>\n<li>${text}`;
+					res += `</li>\n${' '.repeat(idt+2)}<li>${text}`;
+
+					foo.push(`</li>`);
+
+
+					// foo.push(`<li>`);
+					// foo.push(text);
 				}
 				if(idt > stack[0].idt){
-					res += `<${type}><li>${text}`;
+					res += ` <${type}>\n${' '.repeat(idt+2)}<li>${text}`;
+
+					foo.push(`${' '.repeat(idt)}<${type}>`);
+
+					// foo.push(`<li>`);
+					// foo.push(text);
+
+
 					stack.unshift({type, idt});
 				}
 				if(idt < stack[0].idt){
-					res += `</li></${stack[0].type}><li>${text}`;
+					res += `</li></${stack[0].type}>\n${' '.repeat(idt+2)}<li>${text}`;
+
+					foo.push(`</li>`);
+					foo.push(`</${stack[0].type}>`);
+
+
+
+					// foo.push(`<li>`);
+					// foo.push(text);
+
 					stack.shift();
 				}
-				console.log({stack})
+
+				foo.push(`${' '.repeat(idt+2)}<li>`);
+				foo.push(`${' '.repeat(idt+2)}${text}`);
 			});
 
-			res += `</li></${stack[0].type}>`;
-
+			res += `</li>\n</${stack[0].type}>`;
+			foo.push(`</li>`);
+			foo.push(`</${stack[0].type}>`);
 
 			console.log(res)
+			console.log(foo)
 			console.log('-----')
 
 			// let stack = [{}];
@@ -184,12 +233,14 @@ const Rules = Object.values({
 			// return res;
 		}
 	],
-	//OpenDiv
-	//CloseDiv
 });
 
+
 const Paragraph = (text)=>{
-	return `<p>${text.split('\n\n').map(inline).join('</p>\n<p>')}</p>`
+	return text.split('\n\n').map(chunk=>{
+		let divBlock = chunk.startsWith('{{') || chunk.endsWith('}}');
+		return `${divBlock?'':'<p>'}${inline(chunk)}${divBlock?'':'</p>'}`
+	}).join('\n\n')
 }
 
 
@@ -210,19 +261,26 @@ const Paragraph = (text)=>{
 // 	//Add div support
 // ];
 
+const trnp = ()=>['META', true];
 
 const extractMeta = (text)=>{
-	return {meta : undefined, text : text};
+	let meta;
+	if(text.startsWith('---')){
+		const idx = text.indexOf('---', 4);
+		meta = trnp(text.substring(3,idx));
+		text = text.substring(idx+3);
+	}
+	return {meta, text};
 };
 
-const sanatizeHTML = (text)=>text;
+const sanatizeHTML = (text)=>text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 
 
 const md = (str, opts={})=>{
 	opts = {allowHTML: false, meta:null, ...opts};
-	const {text, meta} = extractMeta(str);
-	if(opts.allowHTML) text = sanatizeHTML(text);
+	let {text, meta} = extractMeta(str);
+	if(!opts.allowHTML) text = sanatizeHTML(text);
 
 	const html = blockparse(Rules, text, Paragraph).join('\n\n');
 
@@ -231,8 +289,11 @@ const md = (str, opts={})=>{
 }
 
 
-
-const res = md(` just some text on the top
+/*
+let res = md(`---
+I AM META DATA
+---
+just some text on the top
 
 # this is a _title!_
 
@@ -247,7 +308,7 @@ const res = md(` just some text on the top
 
 - a simple
   - unordered _list_
-  - okay!
+    - okay!
 - yo
 
 
@@ -265,7 +326,7 @@ const res = md(` just some text on the top
 1. number
 
 
-
+<div> this is some html </div>
 
 \`\`\`with_lang
 
@@ -291,10 +352,26 @@ and some more!
 |simple|table|
 |_yo_ | table!  |
 
+{{red
+
+
+with a starting div}}
 
 and just some rando text
 
-`);
+okay cool! }}
+
+`, {allowHTML: true, meta :false});
+*/
+let res = md(`
+
+- a simple
+  - unordered _list_
+    - okay!
+- yo
 
 
-//console.dir(res)
+`, {allowHTML: true, meta :false});
+
+
+//console.log(res)
