@@ -112,7 +112,10 @@ const Rules = Object.values({
 	// ],
 	List : [/(^[ \t]*([0-9]+\.|-)(.*)\n?)+/m,
 		(text)=>{
+
 			console.log(text)
+
+
 			const lines = text.trim().split('\n').map(line=>{
 				let [_, indent, type, text] = /(\s*)(-|[0-9]+\.) ?(.*)/.exec(line);
 				return {
@@ -122,115 +125,63 @@ const Rules = Object.values({
 				}
 			});
 
-			//TODO: forget type switching
-
 			let foo= [];
 			let res = '';
 			let stack = [];
-			lines.map(({type, idt, text})=>{
-				if(!stack.length){
-					stack.push({type, idt});
-					res = `<${type}>\n${' '.repeat(idt+2)}<li>${text}`;
-
+			lines.map(({type, idt, text}, idx)=>{
+				if(!stack[0] || idt > stack[0].idt){
 					foo.push(`<${type}>`);
-
-					foo.push(`${' '.repeat(idt+2)}<li>`);
-					foo.push(`${' '.repeat(idt+2)}${text}`);
-					return;
-				}
-				// Loop through stack each time
-
-				// stack.find(stk=>{
-
-
-				// });
-
-
-				if(idt == stack[0].idt){
-					res += `</li>\n${' '.repeat(idt+2)}<li>${text}`;
-
-					foo.push(`</li>`);
-
-
-					// foo.push(`<li>`);
-					// foo.push(text);
-				}
-				if(idt > stack[0].idt){
-					res += ` <${type}>\n${' '.repeat(idt+2)}<li>${text}`;
-
-					foo.push(`${' '.repeat(idt)}<${type}>`);
-
-					// foo.push(`<li>`);
-					// foo.push(text);
-
-
 					stack.unshift({type, idt});
-				}
-				if(idt < stack[0].idt){
-					res += `</li></${stack[0].type}>\n${' '.repeat(idt+2)}<li>${text}`;
-
-					foo.push(`</li>`);
-					foo.push(`</${stack[0].type}>`);
-
-
-
-					// foo.push(`<li>`);
-					// foo.push(text);
-
-					stack.shift();
+				}else if(idt == stack[0].idt){
+					foo.push(`</li>`)
+				}else if(idt < stack[0].idt){
+					while(idt < stack[0].idt){
+						foo.push(`</li>`)
+						foo.push(`</${stack[0].type}>`);
+						foo.push(`</li>`)
+						stack.shift();
+					}
 				}
 
-				foo.push(`${' '.repeat(idt+2)}<li>`);
-				foo.push(`${' '.repeat(idt+2)}${text}`);
+				//basic
+				foo.push(`<li>`);
+				foo.push(`|${text}`);
+
 			});
 
-			res += `</li>\n</${stack[0].type}>`;
-			foo.push(`</li>`);
-			foo.push(`</${stack[0].type}>`);
+			stack.map(({type, idt})=>{
+				foo.push(`</li>`);
+				foo.push(`</${type}>`)
+			});
+			console.log(stack)
+			console.log('-----')
+			//console.log(res)
+			let depth = 0
+			foo.map(line=>{
+				if(line.startsWith('</')){
+					depth -=2;
+				}else if(line.startsWith('<')){
+					//depth += 2;
+				}else{
+					//depth += 2;
+				}
 
-			console.log(res)
-			console.log(foo)
+				console.log(`${' '.repeat(depth)}${line}`);
+
+				if(line.startsWith('</')){
+					//depth -=2;
+				}else if(line.startsWith('<')){
+					depth += 2;
+				}else{
+					//depth += 2;
+				}
+			})
+
+
+
+
 			console.log('-----')
 
-			// let stack = [{}];
-			// let res = '<ul>';
-
-			// let result = ['<ul>'];
-
-			// lines.map(({type, idt, text})=>{
-			// 	if(stack[0].idt < idt){
-			// 		stack.unshift({type, idt, text});
-			// 	}
-			// 	if(stack[0].idt > idt){
-			// 		stack.shift({type, idt, text});
-			// 	}
-			// 	//console.log({text, stack})
-
-			// 	result.push(`${' '.repeat(idt+2)}<li>${text}<li>`);
-
-			// 	// //if type change, swap stack
-			// 	// //if indent increase, add to stack
-			// 	// //if indent decrease, pop from stack
-
-			// 	// if(!stack[0]){
-			// 	// 	res += `<${type}>\n`;
-			// 	// }else if(stack[0].type !== type){
-			// 	// 	res += `</${stack[0].type}>\n<${type}>`;
-			// 	// }
-
-			// 	// res += `\t<li>${text}</li>\n`;
-
-			// 	// stack.unshift({type, idt, text});
-			// })
-
-			// result.push('</ul>')
-
-			// res += `<${stack[0].type}>`;
-
-			// // console.log(result)
-			// // console.log('-------')
-
-			// return res;
 		}
 	],
 });
@@ -317,7 +268,7 @@ just some text on the top
   1. types
 - still a list though
   - and can nest
-- test
+
 
 
 
@@ -365,13 +316,28 @@ okay cool! }}
 */
 let res = md(`
 
-- a simple
-  - unordered _list_
-    - okay!
-- yo
+
+- one
+  - two
+    - three!
+
+
+- nested
+  1. with differnt
+  1. types
+- still a list though
+  - and can nest
 
 
 `, {allowHTML: true, meta :false});
 
 
 //console.log(res)
+
+/*
+- nested
+  1. with differnt
+  1. types
+- still a list though
+  - and can nest
+  */
