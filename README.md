@@ -25,6 +25,7 @@ npm i pico-md
 
 - `renderer`: overwrites core renderer object
 - `allowHtml`: false
+- `frontmatter`: `undefined, true, or false`
 
 
 
@@ -56,33 +57,3 @@ console.log(Post.meta.title); //'Blogging Like a Regular Guy'
 
 
 
-
-
-
-## React Component
-Renders markdown into HTML within this component.
-
-
-| Props      | Type     | Description |
-| :----      | :------- | :---------- |
-|`content`   | _string_ | A string of markdown that will converted into HTML |
-|`children`  | _string_ | A string of markdown that will converted into HTML |
-|`className` | _string_ | Sets the className of the top level `div` |
-|`options`   | _object_ | Options passed to the `pico-md` lib |
-|`...props`  | _object_ | Any remaining props passed will be applied to the component's top level `div` |
-
-```jsx
-const Markdown = require('pico-md/component.js');
-
-
-<Markdown>
-# Header 1
-Hi I'm text
-</Markdown>
-
-<Markdown content={`You can _pass_ in markdown as a prop`} />
-
-<Markdown onClick={()=>alert('boo!')} options={{allowHtml : true}}>
-This entire content is clickable <hr />
-</Markdown>
-```

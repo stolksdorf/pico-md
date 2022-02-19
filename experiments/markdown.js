@@ -59,10 +59,10 @@ const inlineRules = {
 		regex : /_(.+?)_/,
 		render: (line, text)=>`<em>${inline(text)}</em>`
 	},
-	// bold : {
-	// 	regex : /\*(.+?)\*/,
-	// 	render: (line, text)=>`<strong>${inline(text)}</strong>`
-	// },
+	bold : {
+		regex : /\*(.+?)\*/,
+		render: (line, text)=>`<strong>${inline(text)}</strong>`
+	},
 	sup : {
 		regex : /\^(.+?)\^/,
 		render: (line, text)=>`<sup>${inline(text)}</sup>`

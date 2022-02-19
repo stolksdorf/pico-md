@@ -16,3 +16,8 @@ The engine loops over each of the rules to see if they match the current input. 
 The real power of this approach is when the rendering methods for a match recursively call the engine on it's contents.
 
 When you create multiple grammar sets, the render methods can effectively do "state-switching" by calling the engine on it's contents with different grammar. A great example of this is writing a markdown grammar that matches on the table syntax, but then sends that to a dedciated table grammar, which then refernces the inline grammar set.
+
+
+### Ideas
+
+- PHP regex based markdown parser: https://gist.github.com/jbroadway/2836900
