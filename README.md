@@ -35,7 +35,7 @@ This is parsed using [\`pico-md\`](https://github.com/stolksdorf/pico-md).
 
 - `*bold*`
 - `_italic_`
-- `~~strikeout~~`
+- `~strikeout~`
 - `![image alt text](https://image.url)`
 - `[link text](https://link.url)`
 - `\`inline code\``
