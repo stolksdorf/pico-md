@@ -1,12 +1,11 @@
 {
   "name": "pico-md",
-  "version": "1.0.0",
-  "description": "A lightweight markdown library with some QoL features.",
+  "version": "2.0.0",
+  "description": "A featherweight markdown parser that's easy to extend",
   "main": "pico-md.js",
   "scripts": {
     "test": "pico-check tests/*.test.js",
     "test:dev": "pico-check -w -b tests/*.test.js",
-    "test:experiment": "pico-check -w -b experiments/*.test.js"
   },
   "repository": {
     "type": "git",
@@ -26,8 +25,5 @@
     "html2json": "^1.0.2",
     "pico-check": "^1.2.1"
   },
-  "dependencies": {
-    "js-yaml": "^3.12.2",
-    "marked": "^0.6.1"
-  }
+  "dependencies": {}
 }

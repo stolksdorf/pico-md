@@ -26,7 +26,6 @@ const InlineRules = [
 	[wrap('_'),                  (_,a)=>`<em>${a}</em>`],
 	[wrap('*'),                  (_,a)=>`<strong>${a}</strong>`],
 	[wrap('~~'),                 (_,a)=>`<del>${a}</del>`],
-	[/^-{3,}/gm ,                ()=>`<hr />`],
 	[/!\[([^\]]*)\]\((.*?)\)/gm, (_,a,b) => `<img alt='${a}' src='${b}'></img>`],
 	[/\[([^\]]+)\]\((.*?)\)/gm,  (_,a,b) => `<a href='${b}'>${a}</a>`],
 	[/(?<=\W|^){{([\w,]+)\s*/gm, (_,a)=>`<div${a?` class="${a.replace(/,/g, " ")}"`:''}>`],
@@ -34,7 +33,7 @@ const InlineRules = [
 ];
 const inline = (str)=>{
 	let codetags = [];
-	return InlineRules.reduce((acc, [rgx, fn])=>acc.replace(rgx, fn),
+	return md.inlineRules.reduce((acc, [rgx, fn])=>acc.replace(rgx, fn),
 			str.trim().replace(wrap('`'), (_,a)=>{codetags.push(a);return '¸';}))
 		.replace(/¸/g, ()=>`<code>${codetags.shift()}</code>`);
 };
@@ -48,11 +47,10 @@ const blockparse = (rules, text, fallback)=>{
 			return best;
 		}, false);
 		if(!match) break;
-		const [text, ...groups] = match;
 		const pre = remaining.substring(0,match.index).trim();
 		if(fallback && pre) result.push(fallback(pre));
-		result.push(match.func(text, ...groups));
-		remaining = remaining.substring(match.index + text.length);
+		result.push(match.func(...match));
+		remaining = remaining.substring(match.index + match[0].length);
 	}
 	remaining = remaining.trim();
 	if(fallback && remaining) result.push(fallback(remaining));
@@ -108,12 +106,15 @@ const BlockRules = Object.values({
 		(text)=>{
 			let stack = [];
 			let tokens = text.trim().split('\n').reduce((acc,line)=>{
-				let [_, idt, type, text] = /(\s*)(-|[0-9]+\.) ?(.*)/.exec(line);
-				type = type=='-'?'ul':'ol';
+				let [_, idt, sym, text] = /(\s*)(-|[0-9]+\.) ?(.*)/.exec(line);
+				sym = sym.replace('.', '');
+				let type = sym=='-'?'ul':'ol';
 				idt = idt.length;
 				if(!stack[0] || idt > stack[0].idt){
 					acc.pop();
-					acc.push(`<${type}>`);
+					acc.push((type=='ol'&&sym!=='1')
+						? `<ol start="${sym}">`
+						:`<${type}>`);
 					stack.unshift({type, idt});
 				}else if(idt < stack[0].idt){
 					while(idt < stack[0].idt){
@@ -128,9 +129,9 @@ const BlockRules = Object.values({
 
 			let depth = 0, result='';
 			tokens.map(token=>{
-				if(/<\/(ul|li|ol)>/.test(token)) depth -=1;
+				if(/<\/(ul|li|ol)/.test(token)) depth -=1;
 				result += `${'\t'.repeat(depth)}${token}\n`;
-				if(/<(ul|li|ol)>/.test(token)) depth +=1;
+				if(/<(ul|li|ol)/.test(token)) depth +=1;
 			});
 			return result;
 		}
@@ -157,11 +158,11 @@ const extractMeta = (text)=>{
 const sanatizeHTML = (text)=>text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 const md = (str, opts={})=>{
-	opts = {allowHTML: false, meta:null, ...opts};
+	opts = {allowHTML:false, meta:null, ...opts};
 	let {text, meta} = extractMeta(str);
 	if(!opts.allowHTML) text = sanatizeHTML(text);
 
-	const html = blockparse(BlockRules, text, Paragraph).join('\n\n');
+	const html = blockparse(md.blockRules, text, Paragraph).join('\n\n');
 
 	if(opts.meta || (opts.meta!==false && meta)) return {meta, html};
 	return html;
@@ -172,84 +173,3 @@ md.blockRules = BlockRules;
 md.inlineRules = InlineRules;
 
 module.exports = md;
-
-
-/*
-
-let res = md(`---
-test : true
-tags :
-  - hello
-  - -34.05
-foo : bar
-      none
----
-
-
-
-just some text on the top
-
-# this is a _title!_
-test
-> blockquote *with some bolding*
-> {{red some text}}
-> and another
-
-- a simple
-- unordered _list_
-- okay!
-
-
-- a simple
-  - unordered _list_
-    - okay!
-- yo
-
-
-- nested
-  1. with differnt
-  1. types
-- still a list though
-  - and can nest
-
-
-
-<div> this is some html </div>
-
-\`\`\`with_lang
-
-A wild code block!
-> blockquote
-> and another
-
-\`\`\`
-
--------------
-
-and some more text
-
-and some more!
-
-| fdg  | dfgdfg |        |   |   |
-|----: | :---: |--------|---|---|
-|      |        | dfgdfg |   |   |
-|      |        |        |   |   |
-| dfgg |        | dfg    |   |   |
-
-
-|simple|table|
-|_yo_ | table!  |
-
-{{red
-
-
-with a starting div}}
-
-and just some rando text
-
-okay cool! }}
-
-`, {allowHTML: true, meta : undefined});
-
-console.log(res)
-*/
