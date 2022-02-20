@@ -5,7 +5,7 @@
   "main": "pico-md.js",
   "scripts": {
     "test": "pico-check tests/*.test.js",
-    "test:dev": "pico-check -w -b tests/*.test.js",
+    "test:dev": "pico-check -w -b tests/*.test.js"
   },
   "repository": {
     "type": "git",
